@@ -1,0 +1,96 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    env_file:
+      - ../.env.production
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - appnet
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    env_file:
+      - ../.env.production
+    environment:
+      - PORT_API=4000
+    networks:
+      - appnet
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:4000/api/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    env_file:
+      - ../.env.production
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - appnet
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - appnet
+    expose:
+      - "6379"
+
+  proxy:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.proxy
+    volumes:
+      - certs:/etc/ssl/certs
+    depends_on:
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  redis-data: {}
+  certs: {}
+
+networks:
+  appnet: {}

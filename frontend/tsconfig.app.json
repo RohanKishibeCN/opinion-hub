@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": false,
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strict": false,
+    "allowJs": false,
+    "resolveJsonModule": true
+  },
+  "include": ["src"],
+  "references": []
+}

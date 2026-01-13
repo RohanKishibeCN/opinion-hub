@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #111;
+  background: #bfc3c7;
+  font-family: "MS Sans Serif", "Courier New", "VT323", "Segoe UI", system-ui, monospace, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #111;
+  background: #bfc3c7;
+  -webkit-font-smoothing: auto;
+}
+
+/* Retro skin overrides */
+.app-retro {
+  background: #bfc3c7;
+  color: #111;
+  font-family: "MS Sans Serif", "Courier New", "VT323", "Segoe UI", system-ui, monospace, sans-serif;
+  filter: contrast(1.06) brightness(1.02);
+}
+
+.app-retro .glass-card {
+  background: #dcdcdc;
+  border: 1px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  backdrop-filter: none;
+}
+
+.app-retro .text-gradient {
+  background: none;
+  color: #0000ff;
+  -webkit-background-clip: border-box;
+  -webkit-text-fill-color: inherit;
+}
+
+.app-retro .bg-gradient-to-r,
+.app-retro .bg-gradient-to-br,
+.app-retro .from-\[\#0B1021\],
+.app-retro .from-\[\#0F162E\],
+.app-retro .from-\[\#5B8CFF\],
+.app-retro .via-\[\#7AE2F2\],
+.app-retro .to-\[\#41D4A8\] {
+  background-image: none !important;
+  background-color: #dcdcdc !important;
+}
+
+.app-retro .border-white\/10,
+.app-retro .border-white\/15,
+.app-retro .border-white\/5,
+.app-retro .border-white\/20,
+.app-retro .border-white\/30,
+.app-retro .border-white\/40,
+.app-retro .border-white\/50,
+.app-retro .border-white\/60 {
+  border-color: #7a7a7a !important;
+}
+
+.app-retro .bg-white\/5,
+.app-retro .bg-white\/10,
+.app-retro .bg-white\/15,
+.app-retro .bg-white\/20 {
+  background-color: #dcdcdc !important;
+}
+
+.app-retro .text-white,
+.app-retro .text-white\/50,
+.app-retro .text-white\/60,
+.app-retro .text-white\/70,
+.app-retro .text-white\/80,
+.app-retro .text-white\/90 {
+  color: #111 !important;
+}
+
+.app-retro .rounded-2xl,
+.app-retro .rounded-xl,
+.app-retro .rounded-lg,
+.app-retro .rounded-full {
+  border-radius: 0 !important;
+}
+
+.app-retro button,
+.app-retro input,
+.app-retro select,
+.app-retro textarea {
+  background: #dcdcdc;
+  color: #111;
+  border: 2px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+}
+
+.app-retro button:active {
+  transform: translateY(1px);
+  box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #808080;
+}
+
+.app-retro a {
+  color: #003399;
+  text-decoration: underline;
+}
+
+/* Keep existing animation for use where needed */
+.text-gradient {
+  background: linear-gradient(120deg, #5e8bff, #7fdbda);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optional CRT scanlines */
+.crt-scanlines {
+  position: relative;
+}
+
+.crt-scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08),
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* Retro utility classes */
+.retro-card {
+  background: #dcdcdc;
+  border: 2px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  border-radius: 0;
+}
+
+.retro-btn {
+  background: #dcdcdc;
+  color: #111;
+  border: 2px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 0;
+}
+
+.retro-btn:hover {
+  border-color: #555;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #4a4a4a;
+}
+
+.retro-btn.active {
+  box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #808080;
+  background: #e9eefc;
+  color: #0000ff;
+  border-color: #4c6ef5;
+}
+
+.retro-input {
+  background: #fff;
+  color: #111;
+  border: 2px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  padding: 8px;
+  border-radius: 0;
+}
+
+.retro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #e5e5e5;
+  border: 2px solid #7a7a7a;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 0;
+  color: #0000ff;
+}
+
+.retro-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #e5e5e5;
+}
+
+.retro-table th,
+.retro-table td {
+  border: 1px solid #8c8c8c;
+  padding: 10px 8px;
+  text-align: left;
+  color: #111;
+}
+
+.retro-table thead th {
+  background: #d0d0d0;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.retro-tag {
+  padding: 4px 10px;
+  border: 2px solid #7a7a7a;
+  background: #f0f0f0;
+  font-weight: 700;
+  border-radius: 0;
+  color: #0000ff;
+}
+
+.app-retro .text-emerald-200,
+.app-retro .text-green-400,
+.app-retro .text-emerald-500,
+.app-retro .text-emerald-600 {
+  color: #008000 !important;
+}
+
+.app-retro .bg-emerald-500\/60,
+.app-retro .bg-green-500,
+.app-retro .bg-emerald-500 {
+  background-color: #008000 !important;
+}
+
+.app-retro .bg-blue-500,
+.app-retro .text-blue-500,
+.app-retro .border-blue-500 {
+  background-color: #0000ff !important;
+  color: #0000ff !important;
+  border-color: #0000ff !important;
+}
+
+.pixel-bar {
+  height: 14px;
+  background: repeating-linear-gradient(90deg, #0000ff 0 14px, #4c6ef5 14px 22px, #bfc3c7 22px 26px);
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
+  animation: pixel-scroll 1.4s linear infinite;
+}
+
+@keyframes pixel-scroll {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 48px 0;
+  }
+}

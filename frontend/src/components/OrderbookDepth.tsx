@@ -24,21 +24,27 @@ function SummaryChip({ label, value }: { label: string; value: string }) {
   );
 }
 
+function num(val: any, fallback = 0) {
+  return Number.isFinite(val) ? (val as number) : fallback;
+}
+
 export function OrderbookDepth({ data, loading }: { data?: Orderbook; loading?: boolean }) {
+  const bids = Array.isArray(data?.bids) ? data!.bids : [];
+  const asks = Array.isArray(data?.asks) ? data!.asks : [];
   const rows: SignedRow[] = data
-    ? [...data.bids.map((b) => ({ price: b.price, size: b.size, side: "Bid" })), ...data.asks.map((a) => ({ price: a.price, size: -a.size, side: "Ask" }))].sort(
+    ? [...bids.map((b) => ({ price: num(b.price), size: num(b.size), side: "Bid" })), ...asks.map((a) => ({ price: num(a.price), size: -num(a.size), side: "Ask" }))].sort(
         (a, b) => a.price - b.price
       )
     : [];
 
   const stats = useMemo(() => {
     if (!data || rows.length === 0) return null;
-    const bestBid = data.bids.reduce((m, p) => Math.max(m, p.price), data.bids[0]?.price || 0);
-    const bestAsk = data.asks.reduce((m, p) => Math.min(m, p.price), data.asks[0]?.price || 0);
-    const bidSize = data.bids.reduce((sum, p) => sum + p.size, 0);
-    const askSize = data.asks.reduce((sum, p) => sum + p.size, 0);
+    const bestBid = bids.reduce((m, p) => Math.max(m, num(p.price)), bids[0]?.price || 0);
+    const bestAsk = asks.reduce((m, p) => Math.min(m, num(p.price)), asks[0]?.price || 0);
+    const bidSize = bids.reduce((sum, p) => sum + num(p.size), 0);
+    const askSize = asks.reduce((sum, p) => sum + num(p.size), 0);
     return { bestBid, bestAsk, bidSize, askSize };
-  }, [data, rows]);
+  }, [data, rows, bids, asks]);
 
   const yDomain = useMemo(() => {
     if (rows.length === 0) return [0, 1];
@@ -83,8 +89,8 @@ export function OrderbookDepth({ data, loading }: { data?: Orderbook; loading?: 
         </div>
         {data && (
           <div className="flex gap-2">
-            <SummaryChip label="Mid price" value={data.mid.toFixed(3)} />
-            <SummaryChip label="Spread" value={data.spread.toFixed(3)} />
+            <SummaryChip label="Mid price" value={num(data.mid).toFixed(3)} />
+            <SummaryChip label="Spread" value={num(data.spread).toFixed(3)} />
           </div>
         )}
       </div>
@@ -157,7 +163,7 @@ export function OrderbookDepth({ data, loading }: { data?: Orderbook; loading?: 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-xs text-white/60">Buckets · volume comparison</p>
-              {data && <p className="text-[11px] text-white/50">Dynamic step ~{data.spread.toFixed(3)}</p>}
+              {data && <p className="text-[11px] text-white/50">Dynamic step ~{num(data.spread).toFixed(3)}</p>}
             </div>
             {buckets.length === 0 && <p className="text-sm text-white/60">Waiting for more bucket data</p>}
             {buckets.length > 0 && (

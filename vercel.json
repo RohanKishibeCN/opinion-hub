@@ -1,6 +1,7 @@
 {
   "framework": "vite",
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
+  "installCommand": "npm install && npm --prefix frontend install",
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/**/*.{ts,js}": {

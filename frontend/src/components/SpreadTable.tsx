@@ -57,6 +57,10 @@ function ArbBar({ ev }: { ev: number }) {
   );
 }
 
+function safeNumber(value: any, fallback = 0) {
+  return Number.isFinite(value) ? (value as number) : fallback;
+}
+
 export function SpreadTable({ data, loading }: { data?: SpreadCompare[]; loading?: boolean }) {
   const list = data || [];
   return (
@@ -99,35 +103,42 @@ export function SpreadTable({ data, loading }: { data?: SpreadCompare[]; loading
                 </tr>
               </thead>
               <tbody>
-                {list.map((row) => (
-                  <tr key={row.id}>
-                    <td className="max-w-[240px]">
-                      <p className="font-semibold leading-snug line-clamp-2">{row.title}</p>
-                      <p className="text-[11px] text-black/70 mt-1">Source {row.polySource === "clob" ? "CLOB" : "Gamma"}</p>
-                    </td>
-                    <td className="text-right">{(row.opinionProb * 100).toFixed(1)}%</td>
-                    <td className="text-right">{(row.polyProb * 100).toFixed(1)}%</td>
-                    <td className="text-center">
-                      <EvPill ev={row.evPct} />
-                    </td>
-                    <td className="text-center">
-                      <DirectionTag dir={row.direction} />
-                    </td>
-                    <td className="text-center">
-                      <ArbBar ev={row.evPct} />
-                    </td>
-                    <td className="text-center">
-                      <div className="min-w-[140px] mx-auto">
-                        <LiquidityBar score={row.liquidityScore} />
-                      </div>
-                    </td>
-                    <td className="text-left text-black/80">
-                      <p className="text-sm font-semibold">{row.action}</p>
-                      <p className="text-[11px] text-black/70 mt-1">{row.hint}</p>
-                    </td>
-                    <td className="text-right">${row.volume24h.toLocaleString()}</td>
-                  </tr>
-                ))}
+                {list.map((row) => {
+                  const opinionProb = safeNumber(row.opinionProb, 0);
+                  const polyProb = safeNumber(row.polyProb, 0);
+                  const evPct = safeNumber(row.evPct, 0);
+                  const liquidityScore = safeNumber(row.liquidityScore, 0);
+                  const volume24h = safeNumber(row.volume24h, 0);
+                  return (
+                    <tr key={row.id}>
+                      <td className="max-w-[240px]">
+                        <p className="font-semibold leading-snug line-clamp-2">{row.title}</p>
+                        <p className="text-[11px] text-black/70 mt-1">Source {row.polySource === "clob" ? "CLOB" : "Gamma"}</p>
+                      </td>
+                      <td className="text-right">{(opinionProb * 100).toFixed(1)}%</td>
+                      <td className="text-right">{(polyProb * 100).toFixed(1)}%</td>
+                      <td className="text-center">
+                        <EvPill ev={evPct} />
+                      </td>
+                      <td className="text-center">
+                        <DirectionTag dir={row.direction} />
+                      </td>
+                      <td className="text-center">
+                        <ArbBar ev={evPct} />
+                      </td>
+                      <td className="text-center">
+                        <div className="min-w-[140px] mx-auto">
+                          <LiquidityBar score={liquidityScore} />
+                        </div>
+                      </td>
+                      <td className="text-left text-black/80">
+                        <p className="text-sm font-semibold">{row.action}</p>
+                        <p className="text-[11px] text-black/70 mt-1">{row.hint}</p>
+                      </td>
+                      <td className="text-right">${volume24h.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

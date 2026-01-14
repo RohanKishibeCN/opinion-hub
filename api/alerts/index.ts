@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { methodNotAllowed } from "../_lib/upstream";
-import { addAlert, kvReady, listAlerts, parseAlertPayload } from "../_lib/alerts";
+import { addAlert, redisReady, listAlerts, parseAlertPayload } from "../_lib/alerts";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!kvReady()) {
-    return res.status(503).json({ error: "KV not configured" });
+  if (!redisReady()) {
+    return res.status(503).json({ error: "Redis not configured" });
   }
 
   if (req.method === "GET") {

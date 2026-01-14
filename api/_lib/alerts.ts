@@ -1,5 +1,5 @@
-import { kv } from "@vercel/kv";
 import { randomUUID } from "crypto";
+import { redisClient } from "./cache";
 
 export type AlertRule = {
   id: string;
@@ -15,14 +15,14 @@ export type AlertRule = {
 export type AlertPayload = Omit<AlertRule, "id" | "lastTriggered">;
 
 const ALERT_KEY = "alerts:list";
-const hasKv = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+const hasRedis = Boolean(redisClient);
 
 function nowIso() {
   return new Date().toISOString();
 }
 
-export function kvReady() {
-  return hasKv;
+export function redisReady() {
+  return hasRedis;
 }
 
 export function parseAlertPayload(body: any): { ok: true; data: AlertPayload } | { ok: false; message: string } {
@@ -52,9 +52,9 @@ export function parseAlertPayload(body: any): { ok: true; data: AlertPayload } |
 }
 
 export async function listAlerts(): Promise<AlertRule[]> {
-  if (!hasKv) return [];
+  if (!hasRedis || !redisClient) return [];
   try {
-    return (await kv.get<AlertRule[]>(ALERT_KEY)) ?? [];
+    return (await redisClient.get<AlertRule[]>(ALERT_KEY)) ?? [];
   } catch (err) {
     console.warn("alerts:list", err);
     return [];
@@ -62,12 +62,12 @@ export async function listAlerts(): Promise<AlertRule[]> {
 }
 
 async function saveAlerts(list: AlertRule[]) {
-  if (!hasKv) throw new Error("KV not configured");
-  await kv.set(ALERT_KEY, list);
+  if (!hasRedis || !redisClient) throw new Error("Redis not configured");
+  await redisClient.set(ALERT_KEY, list);
 }
 
 export async function addAlert(input: AlertPayload): Promise<AlertRule> {
-  if (!hasKv) throw new Error("KV not configured");
+  if (!hasRedis || !redisClient) throw new Error("Redis not configured");
   const next: AlertRule = {
     ...input,
     id: randomUUID(),
@@ -81,7 +81,7 @@ export async function addAlert(input: AlertPayload): Promise<AlertRule> {
 }
 
 export async function markTriggered(id: string) {
-  if (!hasKv) return;
+  if (!hasRedis || !redisClient) return;
   const list = await listAlerts();
   const updated = list.map((item) => (item.id === id ? { ...item, lastTriggered: nowIso() } : item));
   await saveAlerts(updated);

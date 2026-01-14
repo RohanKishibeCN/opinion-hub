@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@vercel/node": "^3.2.7",
-    "@vercel/kv": "^1.0.0"
+    "@upstash/redis": "^1.28.4"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { fetchUpstream, methodNotAllowed } from "./_lib/upstream";
-import { AlertRule, kvReady, listAlerts, markTriggered } from "./_lib/alerts";
+import { AlertRule, redisReady, listAlerts, markTriggered } from "./_lib/alerts";
 
 const MAX_WARM_MARKETS = 3;
 const siteUrl = process.env.SITE_URL || "https://opinionhub.vercel.app";
@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     summary.errors.push(`strategy: ${err?.message || err}`);
   }
 
-  if (kvReady()) {
+  if (redisReady()) {
     try {
       const alerts = await listAlerts();
       summary.alertsEvaluated = alerts.length;

@@ -1,22 +1,25 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
-const hasKv = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+export const redisClient = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
+const hasRedis = Boolean(redisClient);
 
 export async function cacheGet<T = any>(key: string): Promise<T | null> {
-  if (!hasKv) return null;
+  if (!hasRedis || !redisClient) return null;
   try {
-    return (await kv.get<T>(key)) ?? null;
+    return (await redisClient.get<T>(key)) ?? null;
   } catch (err) {
-    console.warn("KV get failed", err);
+    console.warn("Redis get failed", err);
     return null;
   }
 }
 
 export async function cacheSet<T = any>(key: string, value: T, ttlSeconds = 60): Promise<void> {
-  if (!hasKv) return;
+  if (!hasRedis || !redisClient) return;
   try {
-    await kv.set(key, value, { ex: ttlSeconds });
+    await redisClient.set(key, value, { ex: ttlSeconds });
   } catch (err) {
-    console.warn("KV set failed", err);
+    console.warn("Redis set failed", err);
   }
 }

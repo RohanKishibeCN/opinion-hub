@@ -29,7 +29,7 @@ npm --prefix frontend run build
 
 ## Environment variables
 - `UPSTREAM_BASE` (optional): Upstream REST base for proxying (default `http://43.159.63.122/api`). Set this in Vercel to your desired backend source.
-- `KV_REST_API_URL`, `KV_REST_API_TOKEN` (**required for alerts**): Vercel KV is used for alerts storage and response caching. Without these, `/api/alerts` and `/api/cron` will return 503.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (**required for alerts + caching**): Upstash Redis (REST) is used for alerts storage and response cache. Without these, `/api/alerts` and `/api/cron` will return 503.
 - `DISCORD_WEBHOOK` (optional): Default webhook fallback when an alert rule omits its own webhook and for `/api/alerts/test`.
 - `SITE_URL` (optional): Link used in alert notifications; defaults to `https://opinionhub.vercel.app`.
 

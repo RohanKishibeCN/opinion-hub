@@ -1,8 +1,8 @@
 import axios from "axios";
 import useSWR from "swr";
-import { OpinionItem, ApiHealth, Orderbook, HistoryPoint, StrategySignal, SpreadCompare } from "../types";
+import { OpinionItem, ApiHealth, Orderbook, HistoryPoint, StrategySignal, SpreadCompare, AlertRule } from "../types";
 
-const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+const apiBase = (import.meta.env.VITE_API_BASE || "/api").replace(/\/$/, "");
 
 const withBase = (path: string) => `${apiBase}${path}` || path;
 const fetcher = (url: string) => axios.get(url).then((r) => r.data);

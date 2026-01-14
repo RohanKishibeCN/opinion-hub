@@ -1,48 +1,51 @@
-## Opinion Hub
-A lightweight, data-dense prediction/markets dashboard (retro/modern skin). Online deployment lives on cloud server `43.159.63.122`, latest code at `/root/Prediction-AI_20260113181942`.
+# Opinion Hub (Vercel-ready)
 
-### Features
-- **Overview**: Hot markets list with probability/sentiment/updated time, search + category filters.
-- **Depth**: Orderbook depth waterfall and slippage; pixel-progress fallback when upstream has no liquidity.
-- **Strategy**: Opinion vs Polymarket spread table with EV highlight and direction hints.
-- **Alerts**: Discord webhook alerts with cooldown and one-click “Send test to Discord”.
-- **Internationalization**: English/Chinese toggle (default English); mobile-friendly layout.
+English-only retro-styled markets dashboard. Frontend is Vite (React + Tailwind). Backend endpoints are now serverless-friendly under `/api` (Vercel Functions), currently proxying to the existing upstream while keeping the new URL surface.
 
-### Stack
-- **Frontend**: React + TypeScript + Vite + SWR + Recharts; Tailwind with custom retro styling.
-- **Backend**: Node + Express + TypeScript.
-- **Deploy**: Docker Compose (web/api/worker/proxy/redis) with Nginx reverse proxy.
+## Structure
+- `frontend/`: Vite app (`npm run dev` inside frontend)
+- `api/`: Vercel Functions (health, markets, history, orderbook, strategy, alerts, submit placeholder)
+- `vercel.json`: Vercel build config (builds frontend, uses Node 18 for functions)
+- `package.json`: Root scripts for Vercel/CI
 
-### Project layout
-- `frontend/`: React app and Vite config.
-- `backend/`: API, worker, routes.
-- `deploy/`: `docker-compose.yml`, `Dockerfile.web` / `Dockerfile.api` / `Dockerfile.proxy`.
-- `.env.example`: environment sample (keep real secrets out of git).
+## Local dev
+```bash
+npm install           # installs root deps (@vercel/node, typescript)
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
 
-### Local development
-1) Install deps
-   - Frontend: `cd frontend && npm install`
-   - Backend: `cd backend && npm install`
-2) Configure env
-   - Copy `.env.example` to `.env` (or `.env.local`), set at least:
-     - `VITE_API_BASE` (local: `http://localhost:4000`)
-     - `OPINION_API_KEY` (real key)
-     - `REDIS_URL` (local: `redis://localhost:6379`)
-     - `DISCORD_WEBHOOK` (optional for alerts)
-3) Run
-   - Backend: `cd backend && npm run build && npm start` (4000)
-   - Frontend: `cd frontend && npm run dev` (5173, ensure `VITE_API_BASE` matches backend)
+## Build
+```bash
+npm --prefix frontend run build
+```
 
-### Docker deploy (same as online)
-- From repo root: `docker compose -f deploy/docker-compose.yml up -d --build`
-- Prepare `.env.production` (not committed) with `VITE_API_BASE`, `OPINION_API_KEY`, `DISCORD_WEBHOOK`, etc.
-- Web served on port 80 via Nginx; internal web runs on 3000.
+## Deploy to Vercel
+- Connect repo to Vercel.
+- Build Command: `npm --prefix frontend install && npm --prefix frontend run build`
+- Output Directory: `frontend/dist`
+- Functions runtime: Node 18 (configured in vercel.json)
+- Default API base (frontend): `/api`
 
-### GitHub hygiene
-- `.gitignore` already ignores `node_modules/`, `dist/`, `.env*` (incl. `.env.production`), `.codebuddy`, editor files, logs.
-- Never commit real secrets; rely on `.env.example` for documentation.
+## Environment variables
+- `UPSTREAM_BASE` (optional): Upstream REST base for proxying (default `http://43.159.63.122/api`). Set this in Vercel to your desired backend source.
+- `KV_REST_API_URL`, `KV_REST_API_TOKEN` (**required for alerts**): Vercel KV is used for alerts storage and response caching. Without these, `/api/alerts` and `/api/cron` will return 503.
+- `DISCORD_WEBHOOK` (optional): Default webhook fallback when an alert rule omits its own webhook and for `/api/alerts/test`.
+- `SITE_URL` (optional): Link used in alert notifications; defaults to `https://opinionhub.vercel.app`.
 
-### Ops quick checks
-- `docker compose -f deploy/docker-compose.yml ps` — container health
-- `curl -s http://127.0.0.1/api/health` — health & cache stats
-- `docker logs --tail 200 deploy-worker-1` — upstream fetch & alert pushes
+## API surface (proxy to upstream unless noted)
+- `GET /api/health`
+- `GET /api/markets?q=...`
+- `GET /api/history/:tokenId?interval=5m&limit=200`
+- `GET /api/orderbook/:tokenId`
+- `GET /api/strategy/spreads`
+- `GET /api/strategy/signals`
+- `GET /api/alerts` (served from Vercel KV)
+- `POST /api/alerts` (served from Vercel KV)
+- `POST /api/alerts/test` (direct webhook send)
+- `POST /api/submit` (placeholder 202)
+- `GET /api/cron` (internal/scheduled warmup + alert checks)
+
+## Notes
+- Redis is not used in this Vercel-ready cut; alerts now live in Vercel KV.
+- Vercel Cron (configured for every 10 minutes) calls `/api/cron` to warm caches and evaluate alerts.

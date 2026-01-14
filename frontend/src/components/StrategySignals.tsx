@@ -74,18 +74,19 @@ export function StrategySignals({ data, loading }: { data?: StrategySignal[]; lo
                   </div>
                 </div>
                 {history.length > 0 && (
-                <div className="mt-3 grid md:grid-cols-5 sm:grid-cols-3 gap-2 text-[11px] text-white/60">
-                  {history.map((h, idx) => (
-                    <div key={`${s.id}-h-${idx}`} className="rounded-lg border border-white/10 bg-white/5 px-2 py-2">
-                      <p className="font-semibold text-white/80">{(safeNum(h.edge, 0) * 100).toFixed(1)}% EV</p>
-                      <p className="text-[10px]">Confidence {Math.round(safeNum(h.confidence, 0) * 100)}%</p>
-                      <p className="text-[10px] text-white/50">{new Date(h.ts).toLocaleTimeString()}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                  <div className="mt-3 grid md:grid-cols-5 sm:grid-cols-3 gap-2 text-[11px] text-white/60">
+                    {history.map((h, idx) => (
+                      <div key={`${s.id}-h-${idx}`} className="rounded-lg border border-white/10 bg-white/5 px-2 py-2">
+                        <p className="font-semibold text-white/80">{(safeNum(h.edge, 0) * 100).toFixed(1)}% EV</p>
+                        <p className="text-[10px]">Confidence {Math.round(safeNum(h.confidence, 0) * 100)}%</p>
+                        <p className="text-[10px] text-white/50">{new Date(h.ts).toLocaleTimeString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

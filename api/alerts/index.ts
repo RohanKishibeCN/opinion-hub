@@ -18,7 +18,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === "POST") {
     const parsed = parseAlertPayload(req.body);
-    if (!parsed.ok) return res.status(400).json({ error: parsed.message });
+    if (!parsed.ok) {
+      const message = "message" in parsed && typeof parsed.message === "string" ? parsed.message : "Invalid alert payload";
+      return res.status(400).json({ error: message });
+    }
     try {
       const rule = await addAlert(parsed.data);
       return res.status(200).json({ ok: true, rule });

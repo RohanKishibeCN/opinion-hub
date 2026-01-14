@@ -73,9 +73,10 @@ export default function App() {
   const { data, isLoading } = useOpinions(query);
   const { data: health } = useHealth();
 
+  const markets = useMemo(() => (Array.isArray(data) && data.length > 0 ? data : placeholderOpinions), [data]);
+
   const list = useMemo(() => {
-    const base = data && data.length > 0 ? data : placeholderOpinions;
-    const hotFiltered = hotOnly ? base.filter((item) => item.probability >= 0.9) : base;
+    const hotFiltered = hotOnly ? markets.filter((item) => item.probability >= 0.9) : markets;
     const filtered = hotFiltered.filter((item) =>
       query ? item.title.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()) : true
     );
@@ -84,7 +85,7 @@ export default function App() {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
     return sorted;
-  }, [data, hotOnly, query, sortKey]);
+  }, [hotOnly, markets, query, sortKey]);
 
   useEffect(() => {
     const cleanup = installWalletGuard((issue) => setWalletIssue(issue));
@@ -160,7 +161,7 @@ export default function App() {
                 setSortKey={setSortKey}
                 hotOnly={hotOnly}
                 setHotOnly={setHotOnly}
-                items={data && data.length > 0 ? data : placeholderOpinions}
+                items={markets}
               />
               {isLoading && (
                 <div className="grid md:grid-cols-2 gap-4">

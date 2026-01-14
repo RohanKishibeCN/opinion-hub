@@ -55,25 +55,25 @@ export function StrategySignals({ data, loading }: { data?: StrategySignal[]; lo
                   Math.abs(edge) >= 0.05 ? "border-cyan-400/50" : "border-white/10"
                 }`}
               >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-white font-semibold text-sm mb-1">{s.title}</p>
-                  <p className="text-xs text-white/60">
-                    Confidence {(confidence * 100).toFixed(1)}% · Edge {(edge * 100).toFixed(1)}% · Refreshed {new Date(s.updatedAt).toLocaleTimeString()}
-                  </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-white font-semibold text-sm mb-1">{s.title}</p>
+                    <p className="text-xs text-white/60">
+                      Confidence {(confidence * 100).toFixed(1)}% · Edge {(edge * 100).toFixed(1)}% · Refreshed {new Date(s.updatedAt).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <EvBadge edge={edge} />
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        s.direction === "long" ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/20 text-red-200"
+                      }`}
+                    >
+                      {s.direction === "long" ? "Long" : "Short"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <EvBadge edge={edge} />
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      s.direction === "long" ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/20 text-red-200"
-                    }`}
-                  >
-                    {s.direction === "long" ? "Long" : "Short"}
-                  </span>
-                </div>
-              </div>
-              {history.length > 0 && (
+                {history.length > 0 && (
                 <div className="mt-3 grid md:grid-cols-5 sm:grid-cols-3 gap-2 text-[11px] text-white/60">
                   {history.map((h, idx) => (
                     <div key={`${s.id}-h-${idx}`} className="rounded-lg border border-white/10 bg-white/5 px-2 py-2">

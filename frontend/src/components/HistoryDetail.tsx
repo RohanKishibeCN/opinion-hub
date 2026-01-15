@@ -2,9 +2,16 @@ import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { HistoryPoint, OpinionItem } from "../types";
 
+function safeNum(val: any, fallback = 0) {
+  return Number.isFinite(val) ? Number(val) : fallback;
+}
+
 function deriveEvents(history?: HistoryPoint[]) {
-  if (!history || history.length === 0) return [] as { ts: number; label: string; desc: string }[];
-  const sorted = [...history].sort((a, b) => a.ts - b.ts);
+  const list = Array.isArray(history) ? history : [];
+  if (list.length === 0) return [] as { ts: number; label: string; desc: string }[];
+  const sorted = [...list]
+    .map((p) => ({ ...p, price: safeNum(p?.price, 0), volume: safeNum(p?.volume, 0), ts: typeof p?.ts === "number" ? p.ts : 0 }))
+    .sort((a, b) => a.ts - b.ts);
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   const high = sorted.reduce((m, p) => (p.price > m.price ? p : m), first);
@@ -13,11 +20,11 @@ function deriveEvents(history?: HistoryPoint[]) {
   const changePct = first.price ? ((last.price - first.price) / first.price) * 100 : 0;
 
   const events = [
-    { ts: first.ts, label: "Start", desc: `Start ${(first.price || 0).toFixed(3)}` },
-    { ts: high.ts, label: "High", desc: `High ${(high.price || 0).toFixed(3)}` },
-    { ts: low.ts, label: "Low", desc: `Low ${(low.price || 0).toFixed(3)}` },
+    { ts: first.ts, label: "Start", desc: `Start ${first.price.toFixed(3)}` },
+    { ts: high.ts, label: "High", desc: `High ${high.price.toFixed(3)}` },
+    { ts: low.ts, label: "Low", desc: `Low ${low.price.toFixed(3)}` },
     { ts: maxVol.ts, label: "Volume spike", desc: `Volume ${maxVol.volume}` },
-    { ts: last.ts, label: changePct >= 0 ? "Close up" : "Close down", desc: `${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}% · Closed ${(last.price || 0).toFixed(3)}` }
+    { ts: last.ts, label: changePct >= 0 ? "Close up" : "Close down", desc: `${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}% · Closed ${last.price.toFixed(3)}` }
   ];
 
   const unique = new Map<number, { ts: number; label: string; desc: string }>();
@@ -29,12 +36,22 @@ function deriveEvents(history?: HistoryPoint[]) {
 }
 
 export function HistoryDetail({ open, onClose, market, history }: { open: boolean; onClose: () => void; market?: OpinionItem; history?: HistoryPoint[] }) {
+  const safeHistory = useMemo(() => (Array.isArray(history) ? history : []), [history]);
+
   const rows = useMemo(() => {
-    return (history || []).map((p) => ({
-      ...p,
-      time: new Date(p.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    }));
-  }, [history]);
+    return safeHistory.map((p) => {
+      const ts = typeof p?.ts === "number" ? p.ts : 0;
+      const price = safeNum(p?.price, 0);
+      const volume = safeNum(p?.volume, 0);
+      return {
+        ...p,
+        ts,
+        price,
+        volume,
+        time: new Date(ts || 0).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+    });
+  }, [safeHistory]);
 
   const priceDomain = useMemo(() => {
     if (rows.length === 0) return [0, 1];
@@ -45,19 +62,21 @@ export function HistoryDetail({ open, onClose, market, history }: { open: boolea
     return [Math.max(0, min - pad), max + pad];
   }, [rows]);
 
-  const events = useMemo(() => deriveEvents(history), [history]);
+  const events = useMemo(() => deriveEvents(safeHistory), [safeHistory]);
   const stats = useMemo(() => {
-    if (!history || history.length === 0) return null;
-    const sorted = [...history].sort((a, b) => a.ts - b.ts);
+    if (safeHistory.length === 0) return null;
+    const sorted = [...safeHistory]
+      .map((p) => ({ ...p, price: safeNum(p?.price, 0), volume: safeNum(p?.volume, 0), ts: typeof p?.ts === "number" ? p.ts : 0 }))
+      .sort((a, b) => a.ts - b.ts);
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
     const high = sorted.reduce((m, p) => Math.max(m, p.price), sorted[0].price);
     const low = sorted.reduce((m, p) => Math.min(m, p.price), sorted[0].price);
     const changeAbs = last.price - first.price;
     const changePct = first.price ? (changeAbs / first.price) * 100 : 0;
-    const vol = sorted.reduce((sum, p) => sum + (p.volume || 0), 0);
+    const vol = sorted.reduce((sum, p) => sum + safeNum(p.volume, 0), 0);
     return { first: first.price, last: last.price, high, low, changeAbs, changePct, vol };
-  }, [history]);
+  }, [safeHistory]);
 
   if (!open) return null;
 
@@ -70,10 +89,7 @@ export function HistoryDetail({ open, onClose, market, history }: { open: boolea
             <p className="text-xs text-white/60">History detail · Timeline</p>
             <h3 className="text-lg font-semibold text-white leading-snug">{market?.title || "No market selected"}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 rounded-lg border border-white/15 text-sm text-white/70 hover:text-white hover:border-white/40"
-          >
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg border border-white/15 text-sm text-white/70 hover:text-white hover:border-white/40">
             Close
           </button>
         </div>
@@ -104,18 +120,14 @@ export function HistoryDetail({ open, onClose, market, history }: { open: boolea
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1f2a44" />
                   <XAxis dataKey="time" tick={{ fill: "#8FA4C7", fontSize: 11 }} interval={4} />
-                  <YAxis tick={{ fill: "#8FA4C7", fontSize: 11 }} tickFormatter={(v) => v.toFixed(2)} domain={priceDomain as [number, number]} />
-                  <Tooltip
-                    contentStyle={{ background: "#11182A", border: "1px solid #1f2a44", borderRadius: 12 }}
-                    labelStyle={{ color: "#E6ECF5" }}
-                    formatter={(val: number) => [val.toFixed(3), "Price"]}
-                  />
+                  <YAxis tick={{ fill: "#8FA4C7", fontSize: 11 }} tickFormatter={(v) => safeNum(v, 0).toFixed(2)} domain={priceDomain as [number, number]} />
+                  <Tooltip contentStyle={{ background: "#11182A", border: "1px solid #1f2a44", borderRadius: 12 }} labelStyle={{ color: "#E6ECF5" }} formatter={(val: number) => [safeNum(val, 0).toFixed(3), "Price"]} />
                   <Area type="monotone" dataKey="price" stroke="#5CE1E6" fill="url(#historyArea)" name="Price" />
                   {events.map((e) => (
                     <ReferenceDot
                       key={e.ts}
                       x={new Date(e.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      y={rows.find((r) => r.ts === e.ts)?.price ?? rows[rows.length - 1]?.price}
+                      y={rows.find((r) => r.ts === e.ts)?.price ?? rows[rows.length - 1]?.price ?? 0}
                       r={5}
                       fill="#F6C344"
                       stroke="#11182A"

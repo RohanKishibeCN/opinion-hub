@@ -3,6 +3,10 @@ import { HistoryPoint, OpinionItem, Orderbook } from "../types";
 import { HistoryChart } from "./HistoryChart";
 import { OrderbookDepth } from "./OrderbookDepth";
 
+function safeNum(val: any, fallback = 0) {
+  return Number.isFinite(val) ? Number(val) : fallback;
+}
+
 function MetricCard({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "pos" | "neg" | "muted" }) {
   const toneClass = tone === "pos" ? "text-emerald-200" : tone === "neg" ? "text-rose-200" : "text-white";
   return (
@@ -29,18 +33,21 @@ export function MarketDetail({
   loadingOrderbook?: boolean;
   onOpenHistoryDetail?: () => void;
 }) {
+  const safeHistory = useMemo(() => (Array.isArray(history) ? history : []), [history]);
   const stats = useMemo(() => {
-    if (!history || history.length === 0) return null;
-    const sorted = [...history].sort((a, b) => a.ts - b.ts);
+    if (safeHistory.length === 0) return null;
+    const sorted = [...safeHistory]
+      .map((p) => ({ ...p, price: safeNum(p?.price, 0), volume: safeNum(p?.volume, 0), ts: typeof p?.ts === "number" ? p.ts : 0 }))
+      .sort((a, b) => a.ts - b.ts);
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
     const high = sorted.reduce((m, p) => Math.max(m, p.price), sorted[0].price);
     const low = sorted.reduce((m, p) => Math.min(m, p.price), sorted[0].price);
     const changeAbs = last.price - first.price;
     const changePct = first.price !== 0 ? (changeAbs / first.price) * 100 : 0;
-    const vol = sorted.reduce((sum, p) => sum + (p.volume || 0), 0);
+    const vol = sorted.reduce((sum, p) => sum + safeNum(p.volume, 0), 0);
     return { last: last.price, changeAbs, changePct, high, low, vol };
-  }, [history]);
+  }, [safeHistory]);
 
   if (!market) {
     return (
@@ -50,8 +57,17 @@ export function MarketDetail({
     );
   }
 
+  const prob = safeNum(market.probability, 0);
   const sentimentTone =
-    market.sentiment === "bull" ? "bg-emerald-500/15 text-emerald-200" : market.sentiment === "bear" ? "bg-rose-500/15 text-rose-200" : "bg-slate-500/15 text-slate-100";
+    market.sentiment === "bull"
+      ? "bg-emerald-500/15 text-emerald-200"
+      : market.sentiment === "bear"
+      ? "bg-rose-500/15 text-rose-200"
+      : "bg-slate-500/15 text-slate-100";
+
+  const mid = safeNum(orderbook?.mid, 0);
+  const spread = safeNum(orderbook?.spread, 0);
+  const slippageLabel = Array.isArray(orderbook?.slippage) && orderbook!.slippage.length > 0 ? `${safeNum(orderbook!.slippage[0].impactPct, 0) * 100}% ...` : "-";
 
   return (
     <section className="mx-auto max-w-6xl px-4 space-y-5">
@@ -61,7 +77,7 @@ export function MarketDetail({
             <p className="text-xs text-white/60">Market detail</p>
             <h3 className="text-xl font-semibold text-white leading-snug">{market.title}</h3>
             <p className="text-sm text-white/60">
-              {market.category} · {(market.probability * 100).toFixed(1)}% · Updated {new Date(market.updatedAt).toLocaleTimeString()}
+              {market.category} · {(prob * 100).toFixed(1)}% · Updated {new Date(market.updatedAt).toLocaleTimeString()}
             </p>
           </div>
           <div className="flex gap-2 items-center">
@@ -69,7 +85,7 @@ export function MarketDetail({
               {market.sentiment === "bull" ? "Bullish" : market.sentiment === "bear" ? "Bearish" : "Neutral"}
             </span>
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-400/20 text-cyan-100 border border-cyan-400/40">
-              Probability {(market.probability * 100).toFixed(1)}%
+              Probability {(prob * 100).toFixed(1)}%
             </span>
           </div>
         </div>
@@ -79,27 +95,19 @@ export function MarketDetail({
           <MetricCard
             label="Range change"
             value={stats ? `${stats.changeAbs >= 0 ? "+" : ""}${stats.changeAbs.toFixed(3)} (${stats.changePct.toFixed(1)}%)` : "-"}
-            hint={stats ? `Window ${new Date(history![0].ts).toLocaleTimeString()} - ${new Date(history![history!.length - 1].ts).toLocaleTimeString()}` : "Waiting for more history"}
+            hint={stats ? `Window ${new Date(safeHistory[0].ts).toLocaleTimeString()} - ${new Date(safeHistory[safeHistory.length - 1].ts).toLocaleTimeString()}` : "Waiting for more history"}
             tone={stats ? (stats.changeAbs >= 0 ? "pos" : "neg") : "muted"}
           />
           <MetricCard label="High / Low" value={stats ? `${stats.high.toFixed(3)} / ${stats.low.toFixed(3)}` : "-"} hint="Based on current history window" />
-          <MetricCard
-            label="Spread"
-            value={orderbook ? orderbook.spread.toFixed(3) : "-"}
-            hint={orderbook ? `Mid ${orderbook.mid.toFixed(3)}` : "Waiting for orderbook"}
-          />
-          <MetricCard
-            label="Slippage (100/500/1000)"
-            value={orderbook?.slippage && orderbook.slippage.length > 0 ? `${orderbook.slippage[0].impactPct * 100}% ...` : "-"}
-            hint={orderbook?.slippage ? "Estimated from depth" : "Waiting for orderbook"}
-          />
+          <MetricCard label="Spread" value={orderbook ? spread.toFixed(3) : "-"} hint={orderbook ? `Mid ${mid.toFixed(3)}` : "Waiting for orderbook"} />
+          <MetricCard label="Slippage (100/500/1000)" value={slippageLabel} hint={orderbook?.slippage ? "Estimated from depth" : "Waiting for orderbook"} />
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="space-y-3">
-          <HistoryChart data={history} loading={loadingHistory} />
-          {history && history.length > 0 && (
+          <HistoryChart data={safeHistory} loading={loadingHistory} />
+          {safeHistory.length > 0 && (
             <button
               onClick={onOpenHistoryDetail}
               className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm text-white/80 hover:border-cyan-400/50 hover:text-white transition"

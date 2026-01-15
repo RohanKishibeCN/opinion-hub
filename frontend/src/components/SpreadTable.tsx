@@ -62,7 +62,7 @@ function safeNumber(value: any, fallback = 0) {
 }
 
 export function SpreadTable({ data, loading }: { data?: SpreadCompare[]; loading?: boolean }) {
-  const list = data || [];
+  const list = Array.isArray(data) ? data : [];
   return (
     <div className="glass-card rounded-2xl border border-white/10 p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
